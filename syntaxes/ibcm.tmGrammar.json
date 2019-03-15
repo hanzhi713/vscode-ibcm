@@ -1,0 +1,50 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "name": "ibcm",
+    "patterns": [
+        {
+            "include": "#keywords"
+        },
+        {
+            "include": "#first_line"
+        }
+    ],
+    "repository": {
+        "keywords": {
+            "patterns": [
+                {
+                    "match": "^([0-9a-fA-F]{4}) ([0-9a-fA-F]{1,4})[ ]{,4}([a-zA-Z0-9_\\-]*)[ ]{,7}([a-zA-Z]{0,6})[ ]{,8}([a-zA-Z0-9_\\-]*)[ ]*(.*)$",
+                    "captures": {
+                        "1": {
+                            "name": "keyword.control"
+                        },
+                        "2": {
+                            "name": "constant.numeric.hex"
+                        },
+                        "3": {
+                            "name": "variable.name"
+                        },
+                        "4": {
+                            "name": "keyword.control"
+                        },
+                        "5": {
+                            "name": "variable.name"
+                        },
+                        "6": {
+                            "name": "comment.line"
+                        }
+                    }
+                }
+            ]
+        },
+        "first_line": {
+            "patterns": [
+                {
+                    "name": "entity.name.function",
+                    "match": "^([A-Za-z ]+)$"
+                }
+            ]
+        }
+    },
+    "scopeName": "source.ibcm"
+}
