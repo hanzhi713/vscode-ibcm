@@ -3,7 +3,7 @@
     "displayName": "ibcm",
     "description": "Basic language support for the IBCM machine language",
     "publisher": "hanzhi713",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "repository": {
         "type": "git",
         "url": "https://github.com/hanzhi713/vscode-ibcm.git"

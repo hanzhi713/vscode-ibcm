@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.0.3]
+
+-   Added unconditional keyword (first 4 chars) matching
+
 ## [0.0.2]
 
 -   Lessened formatting restrictions
