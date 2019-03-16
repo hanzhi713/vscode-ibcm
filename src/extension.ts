@@ -31,6 +31,11 @@ function findLabel(document: vscode.TextDocument, addr: string): string {
     return "";
 }
 
+/**
+ * get the indices of each column
+ * @todo cache the indices for performance
+ * @param document
+ */
 function colIndices(document: vscode.TextDocument) {
     const line = document.lineAt(0).text;
     return {
@@ -52,6 +57,12 @@ interface IBCMLine {
     comments?: string;
 }
 
+/**
+ * Generate a line of IBCM code with label and comments
+ * @param document
+ * @param line
+ * @param offset
+ */
 function addLine(
     document: vscode.TextDocument,
     line: IBCMLine,
@@ -139,7 +150,7 @@ export function activate(context: vscode.ExtensionContext) {
                 const lineNum = position.line - 1;
                 const locnStr =
                     "0".repeat(+(lineNum < 16) + +(lineNum < 256)) +
-                    lineNum.toString(16);
+                    lineNum.toString(16).toUpperCase();
 
                 if (parts.length === 1) {
                     const completionItems: vscode.CompletionItem[] = [];
@@ -164,6 +175,7 @@ export function activate(context: vscode.ExtensionContext) {
                         }
                         completionItems.push(item);
                     }
+                    // code snippet for `dw` -- variable definition
                     const item = new vscode.CompletionItem(
                         "dw",
                         vscode.CompletionItemKind.Method
@@ -188,9 +200,13 @@ export function activate(context: vscode.ExtensionContext) {
                     completionItems.push(item);
                     return completionItems;
                 } else if (parts.length === 2) {
+                    // inst.label completion, e.g. store.a
                     const opcodeName = parts[0];
                     const opcode = opcodeMap.get(opcodeName);
-                    if (opcode === undefined) return;
+                    if (opcode === undefined) {
+                        return;
+                    }
+                    // completion for io.*, e.g. io.readH
                     if (opcode.op === 1) {
                         const completionItems: vscode.CompletionItem[] = [];
                         const options = [
@@ -222,35 +238,40 @@ export function activate(context: vscode.ExtensionContext) {
                         }
                         return completionItems;
                     } else if (opcode.op === 2) {
+                        // completion for shift.*, e.g. shift.rotL
                         const completionItems: vscode.CompletionItem[] = [];
                         const options = [
-                            ["2000", "shiftL", "shift left by ${1} bits"],
-                            ["2100", "shiftR", "shift right by ${1} bits"],
-                            ["2200", "rotL", "rotate left by ${1} bits"],
-                            ["2300", "rotR", "rotate right by ${1} bits"]
+                            ["200${1}", "shiftL", "shift left by ${1} bits"],
+                            ["210${1}", "shiftR", "shift right by ${1} bits"],
+                            ["220${1}", "rotL", "rotate left by ${1} bits"],
+                            ["230${1}", "rotR", "rotate right by ${1} bits"]
                         ];
 
                         for (const [inst, itemLabel, comment] of options) {
-                            // const item = new vscode.CompletionItem(
-                            //     itemLabel,
-                            //     vscode.CompletionItemKind.Function
-                            // );
-                            // item.detail = comment;
-                            // item.filterText = opcodeName + "." + itemLabel;
-                            // item.range = new vscode.Range(
-                            //     new vscode.Position(position.line, 0),
-                            //     new vscode.Position(position.line, comments)
-                            // );
-                            // item.insertText = new vscode.SnippetString(
-                            //     inst +
-                            //         " ".repeat(indices.locn - 4) +
-                            //         locnStr +
-                            //         " ".repeat(indices.label - indices.locn - 3)
-                            // );
-                            // completionItems.push(item);
+                            const item = new vscode.CompletionItem(
+                                itemLabel,
+                                vscode.CompletionItemKind.Function
+                            );
+                            item.detail = comment;
+                            item.filterText = opcodeName + "." + itemLabel;
+                            item.range = new vscode.Range(
+                                new vscode.Position(position.line, 0),
+                                new vscode.Position(position.line, comments)
+                            );
+                            item.insertText = new vscode.SnippetString(
+                                inst +
+                                    " ".repeat(indices.locn - 4) +
+                                    locnStr +
+                                    " ".repeat(
+                                        indices.comments - indices.locn - 3
+                                    ) +
+                                    comment
+                            );
+                            completionItems.push(item);
                         }
                         return completionItems;
                     } else if (opcodesWithAddr.has(opcode.op)) {
+                        // completion for opcode with an address, e.g. store.a
                         const completionItems: vscode.CompletionItem[] = [];
                         for (const temp of getAllLabels(document)) {
                             const [label, locn] = temp;
