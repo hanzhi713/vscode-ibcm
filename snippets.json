@@ -3,5 +3,13 @@
         "prefix": "heading",
         "body": ["mem  locn  label  op       addr   comments"],
         "description": "Generate heading for the IBCM language"
+    },
+    "ibcm": {
+        "prefix": "ibcm",
+        "body": [
+            "mem  locn  label  op       addr   comments",
+            "C00A 000          jmp      start  skip around the variables"
+        ],
+        "description": "Generate heading and first line for the IBCM language"
     }
 }
