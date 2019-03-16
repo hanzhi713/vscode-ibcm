@@ -1,0 +1,7 @@
+{
+    "heading": {
+        "prefix": "heading",
+        "body": ["mem  locn  label  op       addr   comments"],
+        "description": "Generate heading for the IBCM language"
+    }
+}

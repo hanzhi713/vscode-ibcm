@@ -7,19 +7,13 @@
         "vscode": "^1.32.0"
     },
     "categories": [
-        "Other"
+        "Programming Languages"
     ],
     "activationEvents": [
-        "onCommand:extension.helloWorld"
+        "onLanguage:ibcm"
     ],
     "main": "./out/extension.js",
     "contributes": {
-        "commands": [
-            {
-                "command": "extension.helloWorld",
-                "title": "Hello World"
-            }
-        ],
         "languages": [
             {
                 "id": "ibcm",
@@ -37,6 +31,12 @@
                 "language": "ibcm",
                 "scopeName": "source.ibcm",
                 "path": "./syntaxes/ibcm.tmGrammar.json"
+            }
+        ],
+        "snippets": [
+            {
+                "language": "ibcm",
+                "path": "./snippets.json"
             }
         ]
     },
