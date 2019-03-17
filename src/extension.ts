@@ -104,18 +104,26 @@ export function activate(context: vscode.ExtensionContext) {
                     }
 
                     const oprand = code.substr(1);
-                    const opcode = opcodes[Number.parseInt(code.charAt(0), 16)];
+                    const opcode = opcodes[parseInt(code.charAt(0), 16)];
 
-                    let desc: string;
+                    const desc = new vscode.MarkdownString();
                     if (opcodesWithAddr.has(opcode.op)) {
-                        const label = findLabel(document, oprand);
+                        const targetLine = document.lineAt(
+                            parseInt(oprand, 16) + 1
+                        ).text;
+                        const label = targetLine
+                            .substr(colIndices(document).label)
+                            .split(" ")[0];
                         if (label.length !== 0) {
-                            desc = opcode.desc(`**${label}**: ${oprand}`);
+                            desc.appendMarkdown(
+                                opcode.desc(`**${label}**: ${oprand}`)
+                            );
                         } else {
-                            desc = opcode.desc(oprand);
+                            desc.appendMarkdown(opcode.desc(oprand));
                         }
+                        desc.appendCodeblock(targetLine, "ibcm");
                     } else {
-                        desc = opcode.desc(oprand);
+                        desc.appendMarkdown(opcode.desc(oprand));
                     }
                     return {
                         contents: [`**${opcode.name}**`, desc]

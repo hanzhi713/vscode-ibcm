@@ -34,6 +34,10 @@ None
 
 ## Release Notes
 
+### 0.0.4
+
+-   Append target line of code to hover
+
 ### 0.0.3
 
 -   Added unconditional keyword (first 4 chars) matching

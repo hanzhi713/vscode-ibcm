@@ -35,7 +35,7 @@ const opcodes = [
     {
         op: 4,
         name: "store",
-        desc: (oprand: string) => `store ${oprand} into memory`
+        desc: (oprand: string) => `store accumulator to ${oprand}`
     },
     {
         op: 5,
