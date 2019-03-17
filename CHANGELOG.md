@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.0.5]
+
+-   Add label mismatch report
+-   Add label highlight in comments
+-   Can now deal with ibcm file without heading
+-   Fix io and shift opcode
+
 ## [0.0.4]
 
 -   Append target line of code to hover

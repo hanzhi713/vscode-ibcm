@@ -3,7 +3,7 @@
     "displayName": "ibcm",
     "description": "Basic language support for the IBCM machine language",
     "publisher": "hanzhi713",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "repository": {
         "type": "git",
         "url": "https://github.com/hanzhi713/vscode-ibcm.git"
@@ -42,6 +42,13 @@
             {
                 "language": "ibcm",
                 "path": "./snippets.json"
+            }
+        ],
+        "commands": [
+            {
+                "command": "ibcm.fixLocn",
+                "title": "Fix Memory Locations",
+                "category": "IBCM"
             }
         ]
     },

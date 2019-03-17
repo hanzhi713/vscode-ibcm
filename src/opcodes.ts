@@ -12,11 +12,11 @@ const opcodes = [
             switch (type) {
                 case "0":
                     return "read hex word from keyboard";
-                case "1":
+                case "4":
                     return "read ascii character";
-                case "2":
+                case "8":
                     return "write hex word to screen";
-                case "3":
+                case "C":
                     return "write ascii character";
             }
             return "Unknown IO operation";

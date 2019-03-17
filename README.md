@@ -18,6 +18,8 @@ Type `dw` to define variables. Your labels can be used to generate future instru
 
 -   Code snippets (working in progress)
 
+-   Label mismatch checking
+
 ![feature-basic](https://raw.githubusercontent.com/hanzhi713/vscode-ibcm/master/doc/feature-basic.png)
 
 ## Requirements
@@ -33,6 +35,13 @@ Working in progress
 None
 
 ## Release Notes
+
+## 0.0.5
+
+-   Add label mismatch report
+-   Add label highlight in comments
+-   Can now deal with ibcm file without heading
+-   Fix io and shift opcode
 
 ### 0.0.4
 
