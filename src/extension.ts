@@ -54,7 +54,7 @@ function colIndices(document: vscode.TextDocument) {
             mem: 0,
             locn: 5,
             label: 11,
-            op: 18,
+            op: 19,
             addr: 27,
             comments: 34
         };
@@ -209,7 +209,7 @@ export function activate(context: vscode.ExtensionContext) {
                 const { comments, addr } = indices;
                 const parts = document
                     .lineAt(position.line)
-                    .text.substring(0, position.character + hasHeading)
+                    .text.substring(0, position.character + 1)
                     .split(".");
                 const locnStr = getLocn(position.line - hasHeading);
                 if (parts.length === 1) {
@@ -233,7 +233,10 @@ export function activate(context: vscode.ExtensionContext) {
                                 new vscode.Position(position.line, comments)
                             );
                         }
-                        item.detail = opcode.desc("[mem]");
+                        item.detail = `${opcode.name}: ${opcode.op
+                            .toString(16)
+                            .toUpperCase()}`;
+                        item.documentation = opcode.desc("[mem]");
                         completionItems.push(item);
                     }
                     // code snippet for `dw` -- variable definition
@@ -406,14 +409,11 @@ export function activate(context: vscode.ExtensionContext) {
                 const referredLabel = line
                     .substring(indices.addr, indices.comments)
                     .trim();
+
                 // const refereeLocn = labels.get(referee);
                 if (referredLabel.length !== 0) {
                     const refereeLine =
                         parseInt(opcode.substr(1), 16) + hasHeading;
-                    const actualLabel = document
-                        .lineAt(refereeLine)
-                        .text.substring(indices.label, indices.op)
-                        .trim();
                     const refereeRange = new vscode.Range(
                         new vscode.Position(refereeLine, indices.label),
                         new vscode.Position(refereeLine, indices.op - 1)
@@ -422,6 +422,27 @@ export function activate(context: vscode.ExtensionContext) {
                         new vscode.Position(i, 0),
                         new vscode.Position(i, 3)
                     );
+                    if (
+                        !document
+                            .validateRange(refereeRange)
+                            .isEqual(refereeRange)
+                    ) {
+                        diags.push(
+                            new vscode.Diagnostic(
+                                new vscode.Range(
+                                    new vscode.Position(i, indices.addr),
+                                    new vscode.Position(i, indices.comments - 1)
+                                ),
+                                `Label ${referredLabel} does not exist`,
+                                vscode.DiagnosticSeverity.Warning
+                            )
+                        );
+                        continue;
+                    }
+                    const actualLabel = document
+                        .lineAt(refereeLine)
+                        .text.substring(indices.label, indices.op)
+                        .trim();
                     // empty target label
                     if (actualLabel.length === 0) {
                         const diag = new vscode.Diagnostic(

@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.0.6]
+
+-   Added diagnostic for non-existent labels
+-   Adjusted column width
+-   Added opcode for instruction autocompletion
+
 ## [0.0.5]
 
 -   Add label mismatch report
