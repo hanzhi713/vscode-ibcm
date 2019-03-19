@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.0.7]
+
+-   Fix snippet spacing
+-   Show `define variable` if `dw` is detected
+
 ## [0.0.6]
 
 -   Added diagnostic for non-existent labels

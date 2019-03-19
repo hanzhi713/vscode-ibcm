@@ -147,8 +147,8 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.languages.registerHoverProvider("ibcm", {
             provideHover(document, position, token) {
                 if (position.character <= 3) {
-                    const line = document.lineAt(position.line);
-                    const temp = line.text.split(" ");
+                    const line = document.lineAt(position.line).text;
+                    const temp = line.split(" ");
                     const code = temp[0];
                     if (code.length !== 4) {
                         return;
@@ -178,7 +178,15 @@ export function activate(context: vscode.ExtensionContext) {
                         }
                         desc.appendCodeblock(targetLine, "ibcm");
                     } else {
-                        desc.appendMarkdown(opcode.desc(oprand));
+                        if (
+                            opcode.op === 0 &&
+                            line.substring(indices.op, indices.addr).trim() ===
+                                "dw"
+                        ) {
+                            desc.appendMarkdown("define variable");
+                        } else {
+                            desc.appendMarkdown(opcode.desc(oprand));
+                        }
                     }
                     return {
                         contents: [`**${opcode.name}**`, desc]
