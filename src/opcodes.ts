@@ -97,4 +97,16 @@ const opcodes = [
 const opcodesWithAddr = new Set([3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14]);
 const opcodeNames = opcodes.map(op => op.name);
 
-export { opcodes, opcodesWithAddr, opcodeNames };
+const opcodeMap: Map<
+    string,
+    {
+        op: number;
+        name: string;
+        desc: (oprand: string) => string;
+    }
+> = new Map();
+for (const opcode of opcodes) {
+    opcodeMap.set(opcode.name, opcode);
+}
+
+export { opcodes, opcodesWithAddr, opcodeNames, opcodeMap };
