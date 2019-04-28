@@ -5,7 +5,6 @@ import { opcodes, opcodesWithAddr, opcodeNames } from "./opcodes";
 
 function getAllLabels(document: vscode.TextDocument) {
     const labels: Map<string, number> = new Map();
-    const { locn, label, op } = colIndices(document);
     const lines = document.getText().split("\n");
     for (
         let i = +document.lineAt(0).text.startsWith("mem");
@@ -13,31 +12,85 @@ function getAllLabels(document: vscode.TextDocument) {
         i++
     ) {
         const line = lines[i];
-        const labelTx = line.substring(label, op).trim();
-        if (labelTx.length !== 0) {
+        const labelTx = getPart(line, "label");
+        if (labelTx) {
             labels.set(labelTx, i);
         }
     }
     return labels;
 }
 
-// function findLabel(document: vscode.TextDocument, addr: string): string {
-//     const lines = document.getText().split("\n");
-//     const { locn, label, op } = colIndices(document);
-//     for (const line of lines) {
-//         if (line.indexOf(addr) === locn) {
-//             return line.substring(label, op).trim();
-//         }
-//     }
-//     console.log("No match of label is found");
-//     return "";
-// }
+function getPart(
+    line: string,
+    type: "mem" | "locn" | "label" | "op" | "addr" | "comments"
+) {
+    const temp = line.split(/[ ]+/);
+    if (temp.length < 6) {
+        return null;
+    }
+    const targets = {
+        mem: temp[0],
+        locn: temp[1],
+        label: temp[2],
+        op: temp[3],
+        addr: temp[4],
+        comments: temp.slice(5).join(" ")
+    };
+    const target = targets[type];
+    return target ? (target === "-" ? "" : target) : null;
+}
+
+function getPartIndex(
+    line: string,
+    type: "mem" | "locn" | "label" | "op" | "addr" | "comments"
+) {
+    const indices = {
+        mem: 0,
+        locn: 1,
+        label: 2,
+        op: 3,
+        addr: 4,
+        comments: 5
+    };
+    const index = indices[type];
+    let curIdx = 0;
+    let i = 0;
+    while (i < line.length) {
+        if (line.charAt(i) !== " ") {
+            if (curIdx === index) {
+                return i;
+            }
+            while (line.charAt(i) !== " " && i < line.length) {
+                i++;
+            }
+            curIdx++;
+        } else {
+            i++;
+        }
+    }
+    return -1;
+}
 
 /**
- * get the indices of each column
- * @todo cache the indices for performance
- * @param document
+ * Convert zero-based line number to a IBCM memory address
+ * @param lineNum
  */
+function getLocn(lineNum: number) {
+    return (
+        "0".repeat(+(lineNum < 16) + +(lineNum < 256)) +
+        lineNum.toString(16).toUpperCase()
+    );
+}
+
+interface IBCMLine {
+    opcode: string;
+    locn: string;
+    label?: string;
+    op: string;
+    addr?: string;
+    comments?: string;
+}
+
 function colIndices(document: vscode.TextDocument) {
     const line = document.lineAt(0).text;
     if (line.startsWith("mem")) {
@@ -62,26 +115,6 @@ function colIndices(document: vscode.TextDocument) {
 }
 
 /**
- * Convert zero-based line number to a IBCM memory address
- * @param lineNum
- */
-function getLocn(lineNum: number) {
-    return (
-        "0".repeat(+(lineNum < 16) + +(lineNum < 256)) +
-        lineNum.toString(16).toUpperCase()
-    );
-}
-
-interface IBCMLine {
-    opcode: string;
-    locn: string;
-    label?: string;
-    op: string;
-    addr?: string;
-    comments?: string;
-}
-
-/**
  * Generate a line of IBCM code with label and comments
  * @param document
  * @param line
@@ -95,9 +128,9 @@ function addLine(
     const indices = colIndices(document);
     const chunk = (str: string | undefined, len: number) => {
         if (str === undefined) {
-            str = "";
+            str = " - ";
         }
-        return str + " ".repeat(Math.max(len - str.length, 0));
+        return str + " ";
     };
     const opcode = chunk(line.opcode, indices.locn);
     const locn = chunk(line.locn, indices.label - indices.locn);
@@ -123,12 +156,15 @@ export function activate(context: vscode.ExtensionContext) {
                 .lineAt(0)
                 .text.startsWith("mem");
             const lines = editor.document.getText().split("\n");
-            const { locn } = colIndices(editor.document);
             for (let lineNum = hasHeading; lineNum < lines.length; lineNum++) {
                 const line = lines[lineNum];
-                const originalLocn = line.substr(locn, 3);
+                const originalLocn = getPart(line, "locn");
                 const actualLocn = getLocn(lineNum - hasHeading);
+                if (!originalLocn) {
+                    continue;
+                }
                 if (line.length !== 0 && originalLocn !== actualLocn) {
+                    const locn = line.indexOf(originalLocn);
                     edit.replace(
                         new vscode.Range(
                             new vscode.Position(lineNum, locn),
@@ -156,7 +192,6 @@ export function activate(context: vscode.ExtensionContext) {
 
                     const oprand = code.substr(1);
                     const opcode = opcodes[parseInt(code.charAt(0), 16)];
-                    const indices = colIndices(document);
                     const hasHeading = +document
                         .lineAt(0)
                         .text.startsWith("mem");
@@ -166,10 +201,8 @@ export function activate(context: vscode.ExtensionContext) {
                         const targetLine = document.lineAt(
                             parseInt(oprand, 16) + hasHeading
                         ).text;
-                        const label = targetLine
-                            .substring(indices.label, indices.op)
-                            .trim();
-                        if (label.length !== 0) {
+                        const label = getPart(targetLine, "label");
+                        if (label) {
                             desc.appendMarkdown(
                                 opcode.desc(`**${label}**: ${oprand}`)
                             );
@@ -178,11 +211,7 @@ export function activate(context: vscode.ExtensionContext) {
                         }
                         desc.appendCodeblock(targetLine, "ibcm");
                     } else {
-                        if (
-                            opcode.op === 0 &&
-                            line.substring(indices.op, indices.addr).trim() ===
-                                "dw"
-                        ) {
+                        if (opcode.op === 0 && getPart(line, "op") === "dw") {
                             desc.appendMarkdown("define variable");
                         } else {
                             desc.appendMarkdown(opcode.desc(oprand));
@@ -252,17 +281,24 @@ export function activate(context: vscode.ExtensionContext) {
                         "dw",
                         vscode.CompletionItemKind.Method
                     );
+                    // item.insertText = new vscode.SnippetString(
+                    //     "0000" +
+                    //         " ".repeat(indices.locn - 4) +
+                    //         locnStr +
+                    //         " ".repeat(indices.label - indices.locn - 3) +
+                    //         "${1:label}" +
+                    //         " ".repeat(indices.op - indices.label - 5) +
+                    //         "dw - " +
+                    //         " ".repeat(
+                    //             indices.addr -
+                    //                 indices.op -
+                    //                 indices.comments -
+                    //                 indices.addr
+                    //         ) +
+                    //         "${2:comments}"
+                    // );
                     item.insertText = new vscode.SnippetString(
-                        "0000" +
-                            " ".repeat(indices.locn - 4) +
-                            locnStr +
-                            " ".repeat(indices.label - indices.locn - 3) +
-                            "${1:label}" +
-                            " ".repeat(indices.op - indices.label - 5) +
-                            "dw" +
-                            " ".repeat(indices.addr - indices.op - 2) +
-                            " ".repeat(indices.comments - indices.addr) +
-                            "${2:comments}"
+                        `0000 ${locnStr}` + " ${1:label} dw - ${2:comments}"
                     );
                     item.range = new vscode.Range(
                         new vscode.Position(position.line, 0),
@@ -331,13 +367,7 @@ export function activate(context: vscode.ExtensionContext) {
                                 new vscode.Position(position.line, comments)
                             );
                             item.insertText = new vscode.SnippetString(
-                                inst +
-                                    " ".repeat(indices.locn - 4) +
-                                    locnStr +
-                                    " ".repeat(
-                                        indices.comments - indices.locn - 3
-                                    ) +
-                                    comment
+                                `${inst} ${locnStr} ${itemLabel} - ${comment}`
                             );
                             completionItems.push(item);
                         }
@@ -401,9 +431,7 @@ export function activate(context: vscode.ExtensionContext) {
         console.log("Editor changed");
         ibcmDiag.clear();
         const document = editor.document;
-        const indices = colIndices(document);
         const lines = document.getText().split("\n");
-        const labels = getAllLabels(document);
         const diags: vscode.Diagnostic[] = [];
         const hasHeading = +document.lineAt(0).text.startsWith("mem");
         for (let i = hasHeading; i < lines.length; i++) {
@@ -411,20 +439,32 @@ export function activate(context: vscode.ExtensionContext) {
             const opcode = line.substr(0, 4);
             const op = parseInt(opcode.charAt(0), 16);
             // don't bother with instructions without a memory address
-            if (!opcodesWithAddr.has(op)) continue;
-            if (opcode.length !== 0) {
-                // the label of which this line of code refers as
-                const referredLabel = line
-                    .substring(indices.addr, indices.comments)
-                    .trim();
+            if (!opcodesWithAddr.has(op)) {
+                continue;
+            }
+            if (opcode.length) {
+                // the label of which this line of code refers to
+                const referredLabel = getPart(line, "addr");
 
-                // const refereeLocn = labels.get(referee);
-                if (referredLabel.length !== 0) {
+                // note: referred label may be empty
+                if (referredLabel !== null) {
                     const refereeLine =
                         parseInt(opcode.substr(1), 16) + hasHeading;
                     const refereeRange = new vscode.Range(
-                        new vscode.Position(refereeLine, indices.label),
-                        new vscode.Position(refereeLine, indices.op - 1)
+                        new vscode.Position(
+                            refereeLine,
+                            getPartIndex(
+                                document.lineAt(refereeLine).text,
+                                "label"
+                            )
+                        ),
+                        new vscode.Position(
+                            refereeLine,
+                            getPartIndex(
+                                document.lineAt(refereeLine).text,
+                                "op"
+                            ) - 1
+                        )
                     );
                     const opcodeRange = new vscode.Range(
                         new vscode.Position(i, 0),
@@ -438,8 +478,20 @@ export function activate(context: vscode.ExtensionContext) {
                         diags.push(
                             new vscode.Diagnostic(
                                 new vscode.Range(
-                                    new vscode.Position(i, indices.addr),
-                                    new vscode.Position(i, indices.comments - 1)
+                                    new vscode.Position(
+                                        i,
+                                        getPartIndex(
+                                            document.lineAt(i).text,
+                                            "addr"
+                                        )
+                                    ),
+                                    new vscode.Position(
+                                        i,
+                                        getPartIndex(
+                                            document.lineAt(i).text,
+                                            "comments"
+                                        ) - 1
+                                    )
                                 ),
                                 `Label ${referredLabel} does not exist`,
                                 vscode.DiagnosticSeverity.Warning
@@ -447,12 +499,12 @@ export function activate(context: vscode.ExtensionContext) {
                         );
                         continue;
                     }
-                    const actualLabel = document
-                        .lineAt(refereeLine)
-                        .text.substring(indices.label, indices.op)
-                        .trim();
+                    const actualLabel = getPart(
+                        document.lineAt(refereeLine).text,
+                        "label"
+                    );
                     // empty target label
-                    if (actualLabel.length === 0) {
+                    if (!actualLabel) {
                         const diag = new vscode.Diagnostic(
                             refereeRange,
                             `Warning: Label referred as ${referredLabel}, but is missing a label`,
