@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.1.0]
+
+-   Introduce a breaking change: use `-` as the placeholder
+-   New formatter
+-   Add variable definition by `dw.*`
+-   Code style: Extract providers to separated files
+
 ## [0.0.7]
 
 -   Fix snippet spacing
