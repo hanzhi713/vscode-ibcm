@@ -64,12 +64,31 @@ export class IBCMCompletionItemProvider
         } else if (parts.length === 2) {
             // inst.label completion, e.g. store.a
             const opcodeName = parts[0];
+            if (opcodeName === "dw" && parts[1]) {
+                const varName = parts[1];
+                const item = new vscode.CompletionItem(
+                    varName,
+                    vscode.CompletionItemKind.Value
+                );
+                item.filterText = "dw." + parts[1];
+                const comments = `define variable \`${parts[1]}\``;
+                item.detail = comments;
+                item.range = document.lineAt(position.line).range;
+                item.insertText = addLine(document, {
+                    opcode: "0000",
+                    locn: locnStr,
+                    label: parts[1],
+                    op: "dw",
+                    comments
+                });
+                return [item];
+            }
             const opcode = opcodeMap.get(opcodeName);
             if (opcode === undefined) {
                 return;
             }
             // completion for io.*, e.g. io.readH
-            if (opcode.op === 1) {
+            else if (opcode.op === 1) {
                 const completionItems: vscode.CompletionItem[] = [];
                 const options = [
                     ["1000", "readH", "read hex from keyboard"],
@@ -113,10 +132,7 @@ export class IBCMCompletionItemProvider
                     );
                     item.detail = comment;
                     item.filterText = opcodeName + "." + itemLabel;
-                    item.range = new vscode.Range(
-                        new vscode.Position(position.line, 0),
-                        new vscode.Position(position.line, comments)
-                    );
+                    item.range = document.lineAt(position.line).range;
                     item.insertText = new vscode.SnippetString(
                         `${inst} ${locnStr} ${itemLabel} - ${comment}`
                     );

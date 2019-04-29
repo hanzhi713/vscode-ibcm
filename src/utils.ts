@@ -133,22 +133,20 @@ export interface IBCMLine {
  * Generate a line of IBCM code with label and comments
  * @param document
  * @param line
- * @param offset
  */
 export function addLine(document: vscode.TextDocument, line: IBCMLine) {
     const indices = colIndices(document);
     const chunk = (str: string | undefined, len: number) => {
         if (!str) {
-            str = " - ";
+            str = "-";
         }
-        return str + " ";
+        return str + " ".repeat(Math.max(len - str.length, 1));
     };
     const opcode = chunk(line.opcode, indices.locn);
     const locn = chunk(line.locn, indices.label - indices.locn);
     const label = chunk(line.label, indices.op - indices.label);
     const op = chunk(line.op, indices.addr - indices.op);
     const addr = chunk(line.addr, indices.comments - indices.addr);
-    return `${opcode}${locn}${label}${op}${addr}${
-        line.comments ? "" : line.comments
-    }`;
+    const comments = chunk(line.comments, 0);
+    return `${opcode}${locn}${label}${op}${addr}${comments}`;
 }
