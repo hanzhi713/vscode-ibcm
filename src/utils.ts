@@ -31,7 +31,9 @@ export function getAllLabels(document: vscode.TextDocument) {
     return labels;
 }
 
-export const cols = ["mem", "locn", "label", "op", "addr", "comments"];
+type Col = "mem" | "locn" | "label" | "op" | "addr" | "comments";
+
+export const cols: Col[] = ["mem", "locn", "label", "op", "addr", "comments"];
 
 const indices = {
     mem: 0,
@@ -42,10 +44,7 @@ const indices = {
     comments: 5
 };
 
-export function getPart(
-    line: string,
-    type: "mem" | "locn" | "label" | "op" | "addr" | "comments"
-): string | null {
+export function getPart(line: string, type: Col): string | null {
     const temp = line.match(lineRegex);
     if (!temp || temp.length < 7) {
         return null;
@@ -62,10 +61,7 @@ export function getPart(
     return target ? (target === "-" ? "" : target) : null;
 }
 
-export function getPartIndex(
-    line: string,
-    type: "mem" | "locn" | "label" | "op" | "addr" | "comments"
-) {
+export function getPartIndex(line: string, type: Col) {
     const index = indices[type];
     let curIdx = 0;
     let i = 0;
@@ -97,7 +93,7 @@ export function getLocn(lineNum: number) {
     );
 }
 
-export function colIndices(document: vscode.TextDocument): ColData<number> {
+export function colIndices(document: vscode.TextDocument) {
     const line = document.lineAt(0).text;
     if (line.startsWith("mem")) {
         return {
@@ -109,6 +105,16 @@ export function colIndices(document: vscode.TextDocument): ColData<number> {
             comments: line.indexOf("comments")
         };
     } else {
+        for (let i = 0; i < document.lineCount; i++) {
+            const line = document.lineAt(i).text;
+            if (lineRegex.test(line)) {
+                const obj: { [x: string]: number } = {};
+                for (const col of cols) {
+                    obj[col] = getPartIndex(line, col);
+                }
+                return obj;
+            }
+        }
         return {
             mem: 0,
             locn: 5,
@@ -129,6 +135,9 @@ export interface IBCMLine {
     comments?: string;
 }
 
+const snippetDefault = /^\$\{[0-9]+\:[A-Za-z0-9]+\}$/;
+const snippet = /^\$\{[0-9]+\}$/;
+
 /**
  * Generate a line of IBCM code with label and comments
  * @param document
@@ -139,6 +148,11 @@ export function addLine(document: vscode.TextDocument, line: IBCMLine) {
     const chunk = (str: string | undefined, len: number) => {
         if (!str) {
             str = "-";
+            // snippet string with default value
+        } else if (snippetDefault.test(str)) {
+            return str + " ".repeat(Math.max(len + 5 - str.length, 1));
+        } else if (snippet.test(str)) {
+            return str + " ".repeat(Math.max(len + 4 - str.length, 1));
         }
         return str + " ".repeat(Math.max(len - str.length, 1));
     };

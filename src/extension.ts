@@ -64,7 +64,6 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(ibcmDiag);
 
     const listener = vscode.workspace.onDidChangeTextDocument(editor => {
-        console.log("Editor changed");
         ibcmDiag.clear();
         const document = editor.document;
         const diags: vscode.Diagnostic[] = [];
@@ -96,9 +95,9 @@ export function activate(context: vscode.ExtensionContext) {
             if (opcode.length) {
                 // the label of which this line of code refers to
                 const referredLabel = getPart(line, "addr");
-
-                // note: referred label may be empty
-                if (referredLabel) {
+                // note: referred label may be empty.
+                // note: do not check for label of dw
+                if (referredLabel && getPart(line, "op") !== "dw") {
                     const refereeLine =
                         parseInt(opcode.substr(1), 16) + hasHeading;
                     const refereeRange = new vscode.Range(
@@ -153,7 +152,8 @@ export function activate(context: vscode.ExtensionContext) {
                         diag.relatedInformation = [
                             new vscode.DiagnosticRelatedInformation(
                                 new vscode.Location(document.uri, opcodeRange),
-                                `Referred by instruction ${opcode}`
+                                `Referred by instruction ${opcode} at line ${opcodeRange
+                                    .start.line + 1}`
                             )
                         ];
                         diags.push(diag);
@@ -168,7 +168,8 @@ export function activate(context: vscode.ExtensionContext) {
                         diag.relatedInformation = [
                             new vscode.DiagnosticRelatedInformation(
                                 new vscode.Location(document.uri, opcodeRange),
-                                `Referred by instruction ${opcode}`
+                                `Referred by instruction ${opcode} at line ${opcodeRange
+                                    .start.line + 1}`
                             )
                         ];
                         diags.push(diag);

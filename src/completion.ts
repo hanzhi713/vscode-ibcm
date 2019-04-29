@@ -50,7 +50,13 @@ export class IBCMCompletionItemProvider
                 vscode.CompletionItemKind.Method
             );
             item.insertText = new vscode.SnippetString(
-                `0000 ${locnStr}` + " ${1:label} dw - ${2:comments}"
+                addLine(document, {
+                    opcode: "0000",
+                    locn: locnStr,
+                    label: "${1:label}",
+                    op: "dw",
+                    comments: "${2:comments}"
+                })
             );
             item.range = new vscode.Range(
                 position.line,
@@ -134,7 +140,12 @@ export class IBCMCompletionItemProvider
                     item.filterText = opcodeName + "." + itemLabel;
                     item.range = document.lineAt(position.line).range;
                     item.insertText = new vscode.SnippetString(
-                        `${inst} ${locnStr} ${itemLabel} - ${comment}`
+                        addLine(document, {
+                            opcode: inst,
+                            locn: locnStr,
+                            op: itemLabel,
+                            comments: comment
+                        })
                     );
                     completionItems.push(item);
                 }
@@ -149,6 +160,7 @@ export class IBCMCompletionItemProvider
                         label,
                         vscode.CompletionItemKind.Variable
                     );
+
                     const locn = document
                         .lineAt(lineNum)
                         .text.substr(indices.locn, 3);
