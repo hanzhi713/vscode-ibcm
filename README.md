@@ -20,7 +20,7 @@ Type `dw` to define variables. Your labels can be used to generate future instru
 
 -   Label mismatch checking
 
-![feature-basic](https://raw.githubusercontent.com/hanzhi713/vscode-ibcm/master/doc/feature-basic.png)
+![feature-basic](https://raw.githubusercontent.com/hanzhi713/vscode-ibcm/master/doc/demo.gif)
 
 ## Requirements
 

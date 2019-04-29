@@ -15,9 +15,9 @@ const opcodes = [
                 case "4":
                     return "read ascii character";
                 case "8":
-                    return "write hex word to screen";
+                    return "print hex to screen";
                 case "C":
-                    return "write ascii character";
+                    return "print ascii to screen";
             }
             return "Unknown IO operation";
         }
@@ -25,7 +25,21 @@ const opcodes = [
     {
         op: 2,
         name: "shift",
-        desc: () => "shift"
+        desc: (oprand: string) => {
+            const type = oprand.charAt(0);
+            const numBits = parseInt(oprand.substr(1), 16);
+            switch (type) {
+                case "0":
+                    return `shift left by ${numBits} bits`;
+                case "4":
+                    return `shift right by ${numBits} bits`;
+                case "8":
+                    return `rotate left by ${numBits} bits`;
+                case "C":
+                    return `rotate right by ${numBits} bits`;
+            }
+            return "Unknown IO operation";
+        }
     },
     {
         op: 3,

@@ -99,8 +99,8 @@ export class IBCMCompletionItemProvider
                 const options = [
                     ["1000", "readH", "read hex from keyboard"],
                     ["1400", "readA", "read ASCII from keyboard"],
-                    ["1800", "writeH", "print hex to screen"],
-                    ["1C00", "writeA", "print ASCII to screen"]
+                    ["1800", "printH", "print hex to screen"],
+                    ["1C00", "printA", "print ASCII to screen"]
                 ];
 
                 for (const [inst, itemLabel, comment] of options) {
@@ -172,7 +172,8 @@ export class IBCMCompletionItemProvider
                     );
 
                     item.documentation.appendCodeblock(
-                        document.lineAt(lineNum).text.substring(0, addr),
+                        document.lineAt(lineNum).text.substring(0, addr + 1) +
+                            " ",
                         "ibcm"
                     );
 
