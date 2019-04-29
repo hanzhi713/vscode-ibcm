@@ -2,6 +2,8 @@
 
 This extension provides basic syntax highlight and snippet for the [Itty-Bitty Computing Machine (IBCM)](https://aaronbloomfield.github.io/pdr/book/ibcm-chapter.pdf)
 
+<img src="https://raw.githubusercontent.com/hanzhi713/vscode-ibcm/master/doc/demo.gif" width="500px" />
+
 ## How to use
 
 Type `ibcm` to generate a heading for your ibcm file
@@ -26,9 +28,7 @@ If your line labels are incorrect, you can use `Ctrl + Shift + P` to open the co
 
 -   Code formatting
 
-![feature-basic](https://raw.githubusercontent.com/hanzhi713/vscode-ibcm/master/doc/demo.gif)
-
-![format-demo](https://raw.githubusercontent.com/hanzhi713/vscode-ibcm/master/doc/format-demo.gif)
+<img src="https://raw.githubusercontent.com/hanzhi713/vscode-ibcm/master/doc/format-demo.gif" width="400px" />
 
 ## Requirements
 
