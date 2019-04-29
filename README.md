@@ -8,6 +8,10 @@ Type `ibcm` to generate a heading for your ibcm file
 
 Type `dw` to define variables. Your labels can be used to generate future instructions.
 
+You can use the menu to format your code. Your code will be aligned to the heading or the first line of non-empty code
+
+If your line labels are incorrect, you can use `Ctrl + Shift + P` to open the command palette and type `fixLocn` to fix you line labels.
+
 > Note: This extension requires your file to adhere to a strict format. To have the best experience, you should format your code in accordance to the generated heading.
 
 ## Features
@@ -20,7 +24,11 @@ Type `dw` to define variables. Your labels can be used to generate future instru
 
 -   Label mismatch checking
 
+-   Code formatting
+
 ![feature-basic](https://raw.githubusercontent.com/hanzhi713/vscode-ibcm/master/doc/demo.gif)
+
+![format-demo](https://raw.githubusercontent.com/hanzhi713/vscode-ibcm/master/doc/format-demo.gif)
 
 ## Requirements
 
