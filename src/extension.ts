@@ -2,9 +2,10 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import { opcodesWithAddr } from "./opcodes";
-import { getPart, getLocn, getPartIndex } from "./utils";
+import { getPart, getLocn, getPartIndex, lineRegex } from "./utils";
 import { IBCMCompletionItemProvider } from "./completion";
 import { IBCMHoverProvider } from "./hover";
+import { IBCMDocumentFormatter } from "./formatter";
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -52,10 +53,15 @@ export function activate(context: vscode.ExtensionContext) {
         )
     );
 
+    context.subscriptions.push(
+        vscode.languages.registerDocumentFormattingEditProvider(
+            "*",
+            new IBCMDocumentFormatter()
+        )
+    );
+
     const ibcmDiag = vscode.languages.createDiagnosticCollection("ibcm");
     context.subscriptions.push(ibcmDiag);
-
-    const lineRegex = /^([0-9a-fA-F]{4})[ ]+([0-9a-fA-F]{1,3})[ ]+(-|[a-zA-Z0-9_\\-]+)[ ]+(-|[a-zA-Z]{1,7})[ ]+(-|[a-zA-Z0-9_\\-]+)[ ]+(.*)$/;
 
     const listener = vscode.workspace.onDidChangeTextDocument(editor => {
         console.log("Editor changed");
@@ -75,7 +81,7 @@ export function activate(context: vscode.ExtensionContext) {
                 diags.push(
                     new vscode.Diagnostic(
                         vscodeLine.range,
-                        "Bad line",
+                        `Bad line of code. A line must have all the six columns present. If one column is empty, you must use "-" as the place holder`,
                         vscode.DiagnosticSeverity.Error
                     )
                 );
@@ -105,10 +111,7 @@ export function activate(context: vscode.ExtensionContext) {
                         getPartIndex(document.lineAt(refereeLine).text, "op") -
                             1
                     );
-                    const opcodeRange = new vscode.Range(
-                        new vscode.Position(i, 0),
-                        new vscode.Position(i, 3)
-                    );
+                    const opcodeRange = new vscode.Range(i, 0, i, 3);
                     // range invalid: the destination label probably does not exist
                     if (
                         !document

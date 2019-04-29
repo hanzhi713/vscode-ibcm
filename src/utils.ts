@@ -1,14 +1,28 @@
 import * as vscode from "vscode";
 
+export interface ColData<T> {
+    [x: string]: T;
+    mem: T;
+    locn: T;
+    label: T;
+    op: T;
+    addr: T;
+    comments: T;
+}
+
+export const lineRegex = /^([0-9a-fA-F]{4})[ ]+([0-9a-fA-F]{1,3})[ ]+(-|[a-zA-Z0-9_]+)[ ]+(-|[a-zA-Z]{1,7})[ ]+(-|[a-zA-Z0-9_]+)[ ]+(.*)$/;
+
+/**
+ * get all labels as (labelName, lineNumber) pairs
+ */
 export function getAllLabels(document: vscode.TextDocument) {
     const labels: Map<string, number> = new Map();
-    const lines = document.getText().split("\n");
     for (
         let i = +document.lineAt(0).text.startsWith("mem");
-        i < lines.length;
+        i < document.lineCount;
         i++
     ) {
-        const line = lines[i];
+        const line = document.lineAt(i).text;
         const labelTx = getPart(line, "label");
         if (labelTx) {
             labels.set(labelTx, i);
@@ -17,21 +31,32 @@ export function getAllLabels(document: vscode.TextDocument) {
     return labels;
 }
 
+export const cols = ["mem", "locn", "label", "op", "addr", "comments"];
+
+const indices = {
+    mem: 0,
+    locn: 1,
+    label: 2,
+    op: 3,
+    addr: 4,
+    comments: 5
+};
+
 export function getPart(
     line: string,
     type: "mem" | "locn" | "label" | "op" | "addr" | "comments"
-) {
-    const temp = line.split(/[ ]+/);
-    if (temp.length < 6) {
+): string | null {
+    const temp = line.match(lineRegex);
+    if (!temp || temp.length < 7) {
         return null;
     }
     const targets = {
-        mem: temp[0],
-        locn: temp[1],
-        label: temp[2],
-        op: temp[3],
-        addr: temp[4],
-        comments: temp.slice(5).join(" ")
+        mem: temp[1],
+        locn: temp[2],
+        label: temp[3],
+        op: temp[4],
+        addr: temp[5],
+        comments: temp[6]
     };
     const target = targets[type];
     return target ? (target === "-" ? "" : target) : null;
@@ -41,14 +66,6 @@ export function getPartIndex(
     line: string,
     type: "mem" | "locn" | "label" | "op" | "addr" | "comments"
 ) {
-    const indices = {
-        mem: 0,
-        locn: 1,
-        label: 2,
-        op: 3,
-        addr: 4,
-        comments: 5
-    };
     const index = indices[type];
     let curIdx = 0;
     let i = 0;
@@ -80,7 +97,7 @@ export function getLocn(lineNum: number) {
     );
 }
 
-export function colIndices(document: vscode.TextDocument) {
+export function colIndices(document: vscode.TextDocument): ColData<number> {
     const line = document.lineAt(0).text;
     if (line.startsWith("mem")) {
         return {
@@ -95,10 +112,10 @@ export function colIndices(document: vscode.TextDocument) {
         return {
             mem: 0,
             locn: 5,
-            label: 11,
-            op: 19,
-            addr: 27,
-            comments: 34
+            label: 10,
+            op: 20,
+            addr: 28,
+            comments: 38
         };
     }
 }
@@ -121,7 +138,7 @@ export interface IBCMLine {
 export function addLine(document: vscode.TextDocument, line: IBCMLine) {
     const indices = colIndices(document);
     const chunk = (str: string | undefined, len: number) => {
-        if (str === undefined) {
+        if (!str) {
             str = " - ";
         }
         return str + " ";
@@ -132,6 +149,6 @@ export function addLine(document: vscode.TextDocument, line: IBCMLine) {
     const op = chunk(line.op, indices.addr - indices.op);
     const addr = chunk(line.addr, indices.comments - indices.addr);
     return `${opcode}${locn}${label}${op}${addr}${
-        line.comments === undefined ? "" : line.comments
+        line.comments ? "" : line.comments
     }`;
 }

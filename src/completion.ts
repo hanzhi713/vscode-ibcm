@@ -126,7 +126,8 @@ export class IBCMCompletionItemProvider
             } else if (opcodesWithAddr.has(opcode.op)) {
                 // completion for opcode with an address, e.g. store.a
                 const completionItems: vscode.CompletionItem[] = [];
-                for (const temp of getAllLabels(document)) {
+                const allLabels = getAllLabels(document);
+                for (const temp of allLabels) {
                     const [label, lineNum] = temp;
                     const item = new vscode.CompletionItem(
                         label,

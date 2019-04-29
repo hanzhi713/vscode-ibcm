@@ -34,7 +34,11 @@ export class IBCMHoverProvider implements vscode.HoverProvider {
                 desc.appendCodeblock(targetLine, "ibcm");
             } else {
                 if (opcode.op === 0 && getPart(line, "op") === "dw") {
-                    desc.appendMarkdown("define variable");
+                    desc.appendMarkdown("define variable\n\n");
+                    desc.appendMarkdown(`decimal value: ${parseInt(code, 16)}`);
+                    return {
+                        contents: ["**dw**", desc]
+                    };
                 } else {
                     desc.appendMarkdown(opcode.desc(oprand));
                 }
