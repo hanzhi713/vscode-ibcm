@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.1.1]
+
+-   Fix occasional line label inaccuracy
+-   Update README to include format requirements and diagnostic example
+
 ## [0.1.0]
 
 -   Introduce a breaking change: use `-` as the placeholder

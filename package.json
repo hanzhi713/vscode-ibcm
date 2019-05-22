@@ -3,7 +3,7 @@
     "displayName": "ibcm",
     "description": "Basic support for the IBCM machine language",
     "publisher": "hanzhi713",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "license": "MIT",
     "repository": {
         "type": "git",
@@ -25,7 +25,7 @@
                 "id": "ibcm",
                 "aliases": [
                     "IBCM",
-                    "ibcm"
+                    "Itty-Bitty Computing Machine"
                 ],
                 "extensions": [
                     ".ibcm"
