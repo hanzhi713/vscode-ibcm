@@ -14,7 +14,19 @@ You can use the menu to format your code. Your code will be aligned to the headi
 
 If your line labels are incorrect, you can use `Ctrl + Shift + P` to open the command palette and type `fixLocn` to fix you line labels.
 
-> Note: This extension requires your file to adhere to a strict format. To have the best experience, you should format your code in accordance to the generated heading.
+### Code Format Requirements
+
+For the extension to work properly, each line of your IBCM code must have 6 columns, corresponding to IBCM opcode, 3-digit hex line number, label, opcode, address label, and comments. If one column is empty, please use `-` as the placeholder. Note that the first two columns must be present! The following regex is used to match each IBCM line.
+
+```regex
+^([0-9a-fA-F]{4})[ ]+([0-9a-fA-F]{1,3})[ ]+(-|[a-zA-Z0-9_]+)[ ]+(-|[a-zA-Z]{1,7})[ ]+(-|[a-zA-Z0-9_]+)[ ]+(.*)$
+```
+
+The label and address are essential for autocompletion and diagnostics. When you type `load.a`, the extension will find a label called a, if it exists, and get its line number to fill in the address for you. The linter checks whether the line number of the label referred by your address column match the address specified by your opcode.
+
+For example, in the following code snippet, the first jump command is `C005`, which refers to memory location `005`. However, the line at `005` does not have a label. The linter will detect this kind of mistake ahd throw a warning.
+
+<img src="https://raw.githubusercontent.com/hanzhi713/vscode-ibcm/master/doc/diagnostics.png" width="500px" />
 
 ## Features
 
