@@ -1,9 +1,8 @@
 import * as vscode from "vscode";
-import { getLocn, colIndices, addLine, getAllLabels } from "./utils";
+import { getLocn, colIndices, addLine, getAllLabels, getPartIndex, lineRegex, getPart } from "./utils";
 import { opcodes, opcodesWithAddr, opcodeMap } from "./opcodes";
 
-export class IBCMCompletionItemProvider
-    implements vscode.CompletionItemProvider {
+export class IBCMCompletionItemProvider implements vscode.CompletionItemProvider {
     public provideCompletionItems(
         document: vscode.TextDocument,
         position: vscode.Position,
@@ -20,10 +19,7 @@ export class IBCMCompletionItemProvider
         if (parts.length === 1) {
             const completionItems: vscode.CompletionItem[] = [];
             for (const opcode of opcodes) {
-                const item = new vscode.CompletionItem(
-                    opcode.name,
-                    vscode.CompletionItemKind.Function
-                );
+                const item = new vscode.CompletionItem(opcode.name, vscode.CompletionItemKind.Function);
                 // halt or no operation
                 if (opcode.op === 11 || opcode.op === 0) {
                     item.insertText = addLine(document, {
@@ -31,24 +27,14 @@ export class IBCMCompletionItemProvider
                         locn: locnStr,
                         op: opcode.name
                     });
-                    item.range = new vscode.Range(
-                        position.line,
-                        0,
-                        position.line,
-                        comments
-                    );
+                    item.range = new vscode.Range(position.line, 0, position.line, comments);
                 }
-                item.detail = `${opcode.name}: ${opcode.op
-                    .toString(16)
-                    .toUpperCase()}`;
+                item.detail = `${opcode.name}: ${opcode.op.toString(16).toUpperCase()}`;
                 item.documentation = opcode.desc("[mem]");
                 completionItems.push(item);
             }
             // code snippet for `dw` -- variable definition
-            const item = new vscode.CompletionItem(
-                "dw",
-                vscode.CompletionItemKind.Method
-            );
+            const item = new vscode.CompletionItem("dw", vscode.CompletionItemKind.Method);
             item.insertText = new vscode.SnippetString(
                 addLine(document, {
                     opcode: "0000",
@@ -58,12 +44,7 @@ export class IBCMCompletionItemProvider
                     comments: "${2:comments}"
                 })
             );
-            item.range = new vscode.Range(
-                position.line,
-                0,
-                position.line,
-                comments
-            );
+            item.range = new vscode.Range(position.line, 0, position.line, comments);
             item.detail = "define a variable";
             completionItems.push(item);
             return completionItems;
@@ -72,10 +53,7 @@ export class IBCMCompletionItemProvider
             const opcodeName = parts[0];
             if (opcodeName === "dw" && parts[1]) {
                 const varName = parts[1];
-                const item = new vscode.CompletionItem(
-                    varName,
-                    vscode.CompletionItemKind.Value
-                );
+                const item = new vscode.CompletionItem(varName, vscode.CompletionItemKind.Value);
                 item.filterText = "dw." + parts[1];
                 const comments = `define variable \`${parts[1]}\``;
                 item.detail = comments;
@@ -104,10 +82,7 @@ export class IBCMCompletionItemProvider
                 ];
 
                 for (const [inst, itemLabel, comment] of options) {
-                    const item = new vscode.CompletionItem(
-                        itemLabel,
-                        vscode.CompletionItemKind.Function
-                    );
+                    const item = new vscode.CompletionItem(itemLabel, vscode.CompletionItemKind.Function);
                     item.detail = comment;
                     item.filterText = opcodeName + "." + itemLabel;
                     const line = addLine(document, {
@@ -132,10 +107,7 @@ export class IBCMCompletionItemProvider
                 ];
 
                 for (const [inst, itemLabel, comment] of options) {
-                    const item = new vscode.CompletionItem(
-                        itemLabel,
-                        vscode.CompletionItemKind.Function
-                    );
+                    const item = new vscode.CompletionItem(itemLabel, vscode.CompletionItemKind.Function);
                     item.detail = comment;
                     item.filterText = opcodeName + "." + itemLabel;
                     item.range = document.lineAt(position.line).range;
@@ -156,38 +128,31 @@ export class IBCMCompletionItemProvider
                 const allLabels = getAllLabels(document);
                 for (const temp of allLabels) {
                     const [label, lineNum] = temp;
-                    const item = new vscode.CompletionItem(
-                        label,
-                        vscode.CompletionItemKind.Variable
-                    );
+                    const item = new vscode.CompletionItem(label, vscode.CompletionItemKind.Variable);
 
-                    const locn = document
-                        .lineAt(lineNum)
-                        .text.substr(indices.locn, 3);
-                    item.detail = opcode.desc(`${label}: ${locn}`);
-                    item.filterText = opcodeName + "." + label;
+                    const targetLine = document.lineAt(lineNum).text;
+                    if (lineRegex.test(targetLine)) {
+                        const targetLocn = getLocn(lineNum - hasHeading);
+                        item.detail = opcode.desc(`${label} (locn ${targetLocn})`);
+                        item.filterText = opcodeName + "." + label;
 
-                    item.documentation = new vscode.MarkdownString(
-                        `line at **${label}: ${locn}**`
-                    );
+                        item.documentation = new vscode.MarkdownString(`line at **${label}**`);
 
-                    item.documentation.appendCodeblock(
-                        document.lineAt(lineNum).text.substring(0, addr + 1) +
-                            " ",
-                        "ibcm"
-                    );
+                        item.documentation.appendCodeblock(
+                            targetLine.substring(0, getPartIndex(targetLine, "addr") + 1) + " ",
+                            "ibcm"
+                        );
 
-                    const line = addLine(document, {
-                        opcode: opcode.op.toString(16).toUpperCase() + locn,
-                        locn: locnStr,
-                        op: opcode.name,
-                        addr: label,
-                        comments: opcode.desc(`\`${label}\``)
-                    });
-
-                    item.insertText = line;
-                    item.range = document.lineAt(position.line).range;
-                    completionItems.push(item);
+                        item.insertText = addLine(document, {
+                            opcode: opcode.op.toString(16).toUpperCase() + targetLocn,
+                            locn: locnStr,
+                            op: opcode.name,
+                            addr: label,
+                            comments: opcode.desc(`\`${label}\``)
+                        });
+                        item.range = document.lineAt(position.line).range;
+                        completionItems.push(item);
+                    }
                 }
                 return completionItems;
             }

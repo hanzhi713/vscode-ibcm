@@ -19,9 +19,8 @@ export function activate(context: vscode.ExtensionContext) {
             const hasHeading = +editor.document
                 .lineAt(0)
                 .text.startsWith("mem");
-            const lines = editor.document.getText().split("\n");
-            for (let lineNum = hasHeading; lineNum < lines.length; lineNum++) {
-                const line = lines[lineNum];
+            for (let lineNum = hasHeading; lineNum < editor.document.lineCount; lineNum++) {
+                const line = editor.document.lineAt(lineNum).text;
                 const originalLocn = getPart(line, "locn");
                 const actualLocn = getLocn(lineNum - hasHeading);
                 if (!originalLocn) {

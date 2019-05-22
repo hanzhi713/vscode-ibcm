@@ -33,7 +33,7 @@ export const listener = vscode.workspace.onDidChangeTextDocument(editor => {
             continue;
         }
         if (opcode.length) {
-            // the label of which this line of code refers to
+            // the label this line of code refers to
             const referredLabel = getPart(line, "addr");
             // note: referred label may be empty.
             // note: do not check for label of dw

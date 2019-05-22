@@ -10,6 +10,9 @@ export interface ColData<T> {
     comments: T;
 }
 
+/**
+ * regex for a valid ibcm line
+ */
 export const lineRegex = /^([0-9a-fA-F]{4})[ ]+([0-9a-fA-F]{1,3})[ ]+(-|[a-zA-Z0-9_]+)[ ]+(-|[a-zA-Z]{1,7})[ ]+(-|[a-zA-Z0-9_]+)[ ]+(.*)$/;
 
 /**
@@ -61,6 +64,11 @@ export function getPart(line: string, type: Col): string | null {
     return target ? (target === "-" ? "" : target) : null;
 }
 
+/**
+ * get the index of the start of a column `type`
+ * @param line 
+ * @param type 
+ */
 export function getPartIndex(line: string, type: Col) {
     const index = indices[type];
     let curIdx = 0;
@@ -135,6 +143,9 @@ export interface IBCMLine {
     comments?: string;
 }
 
+/**
+ * regex for a snippet string with a default value
+ */
 const snippetDefault = /^\$\{[0-9]+\:[A-Za-z0-9]+\}$/;
 const snippet = /^\$\{[0-9]+\}$/;
 
