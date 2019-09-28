@@ -96,8 +96,7 @@ export function getPartIndex(line: string, type: Col) {
  */
 export function getLocn(lineNum: number) {
     return (
-        "0".repeat(+(lineNum < 16) + +(lineNum < 256)) +
-        lineNum.toString(16).toUpperCase()
+        lineNum.toString(16).toUpperCase().padStart(+(lineNum < 16) + +(lineNum < 256), "0")
     );
 }
 
@@ -161,11 +160,11 @@ export function addLine(document: vscode.TextDocument, line: IBCMLine) {
             str = "-";
             // snippet string with default value
         } else if (snippetDefault.test(str)) {
-            return str + " ".repeat(Math.max(len + 5 - str.length, 1));
+            return str.padEnd(len + 5) ;
         } else if (snippet.test(str)) {
-            return str + " ".repeat(Math.max(len + 4 - str.length, 1));
+            return str.padEnd(len + 4);
         }
-        return str + " ".repeat(Math.max(len - str.length, 1));
+        return str.padEnd(len);
     };
     const opcode = chunk(line.opcode, indices.locn);
     const locn = chunk(line.locn, indices.label - indices.locn);

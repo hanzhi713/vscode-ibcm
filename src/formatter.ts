@@ -24,7 +24,7 @@ export class IBCMDocumentFormatter
             for (let i = 0; i < indices.length - 1; i++) {
                 const colLen = indices[i + 1] - indices[i];
                 const part = match[i + 1];
-                newLine += part + " ".repeat(Math.max(colLen - part.length, 1));
+                newLine += part.padEnd(colLen);
             }
             newLine += match[6];
             if (line !== newLine) {
