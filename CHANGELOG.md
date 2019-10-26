@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.1.2]
+
+-   Fix location generation
+
 ## [0.1.1]
 
 -   Fix occasional line label inaccuracy
