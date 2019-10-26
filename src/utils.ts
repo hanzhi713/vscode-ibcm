@@ -95,9 +95,7 @@ export function getPartIndex(line: string, type: Col) {
  * @param lineNum
  */
 export function getLocn(lineNum: number) {
-    return (
-        lineNum.toString(16).toUpperCase().padStart(+(lineNum < 16) + +(lineNum < 256), "0")
-    );
+    return lineNum.toString(16).toUpperCase().padStart(3, "0");
 }
 
 export function colIndices(document: vscode.TextDocument) {
